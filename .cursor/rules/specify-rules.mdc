@@ -1,0 +1,24 @@
+# AgentFlowBuilder Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-09-27
+
+## Active Technologies
+- TypeScript 5.0+ / React 18+ + React, React Flow, Monaco Editor, JSON Schema validation (001-we-need-to)
+
+## Project Structure
+```
+src/
+tests/
+```
+
+## Commands
+npm test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES] npm run lint
+
+## Code Style
+TypeScript 5.0+ / React 18+: Follow standard conventions
+
+## Recent Changes
+- 001-we-need-to: Added TypeScript 5.0+ / React 18+ + React, React Flow, Monaco Editor, JSON Schema validation
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

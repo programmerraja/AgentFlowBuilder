@@ -1,0 +1,774 @@
+openapi: 3.0.3
+info:
+  title: Workflow Builder API
+  description: API for workflow import, export, validation, and management
+  version: 1.0.0
+  contact:
+    name: Workflow Builder Team
+    email: support@workflowbuilder.com
+
+servers:
+  - url: /api/v1
+    description: Local development server
+
+paths:
+  /workflows:
+    get:
+      summary: List all workflows
+      description: Retrieve all available workflows
+      operationId: listWorkflows
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workflows:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkflowSummary'
+                  total:
+                    type: integer
+                    description: Total number of workflows
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create new workflow
+      description: Create a new workflow from JSON definition
+      operationId: createWorkflow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Workflow'
+      responses:
+        '201':
+          description: Workflow created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workflow'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /workflows/{workflowId}:
+    get:
+      summary: Get workflow by ID
+      description: Retrieve a specific workflow by its ID
+      operationId: getWorkflow
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique workflow identifier
+      responses:
+        '200':
+          description: Workflow found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workflow'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Update workflow
+      description: Update an existing workflow
+      operationId: updateWorkflow
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique workflow identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Workflow'
+      responses:
+        '200':
+          description: Workflow updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workflow'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Delete workflow
+      description: Delete a workflow by its ID
+      operationId: deleteWorkflow
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique workflow identifier
+      responses:
+        '204':
+          description: Workflow deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /workflows/{workflowId}/validate:
+    post:
+      summary: Validate workflow
+      description: Validate a workflow definition for errors and completeness
+      operationId: validateWorkflow
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique workflow identifier
+      responses:
+        '200':
+          description: Validation completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    description: Whether workflow is valid
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ValidationError'
+                  warnings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /workflows/{workflowId}/export:
+    get:
+      summary: Export workflow
+      description: Export workflow as JSON file
+      operationId: exportWorkflow
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique workflow identifier
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [json, yaml]
+            default: json
+          description: Export format
+      responses:
+        '200':
+          description: Workflow exported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workflow'
+            application/x-yaml:
+              schema:
+                $ref: '#/components/schemas/Workflow'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /workflows/import:
+    post:
+      summary: Import workflow
+      description: Import workflow from JSON file
+      operationId: importWorkflow
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Workflow JSON file
+                validate:
+                  type: boolean
+                  default: true
+                  description: Whether to validate imported workflow
+      responses:
+        '201':
+          description: Workflow imported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workflow'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /workflows/{workflowId}/test:
+    post:
+      summary: Test workflow
+      description: Run workflow test with mock data
+      operationId: testWorkflow
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique workflow identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestRequest'
+      responses:
+        '200':
+          description: Test completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    Workflow:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - version
+        - nodes
+        - states
+      properties:
+        id:
+          type: string
+          description: Unique workflow identifier
+        name:
+          type: string
+          description: Human-readable workflow name
+        description:
+          type: string
+          description: Workflow description
+        version:
+          type: string
+          pattern: '^\d+\.\d+\.\d+$'
+          description: Semantic version number
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last modification timestamp
+        requiredWorkflows:
+          type: array
+          items:
+            type: string
+          description: Prerequisite workflow IDs
+        nodes:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Node'
+          description: Node definitions keyed by node ID
+        states:
+          $ref: '#/components/schemas/WorkflowStates'
+        summary:
+          $ref: '#/components/schemas/WorkflowSummary'
+
+    Node:
+      type: object
+      required:
+        - id
+        - name
+        - prompt
+        - tools
+        - stateKeys
+        - edges
+      properties:
+        id:
+          type: string
+          description: Unique node identifier
+        name:
+          type: string
+          description: Node name
+        label:
+          type: string
+          description: Display label
+        isFirstNode:
+          type: boolean
+          description: Entry point flag
+        prompt:
+          type: string
+          description: LLM instruction text
+        preAction:
+          type: array
+          items:
+            type: string
+          description: Actions executed before node
+        postAction:
+          type: array
+          items:
+            type: string
+          description: Actions executed after node
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tool'
+          description: Available tools for this node
+        stateKeys:
+          type: array
+          items:
+            $ref: '#/components/schemas/StateKey'
+          description: Required/optional state data
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Edge'
+          description: Conditional navigation rules
+        position:
+          $ref: '#/components/schemas/Position'
+        type:
+          type: string
+          enum: [input, process, output, decision]
+          description: Node category
+
+    Tool:
+      type: object
+      required:
+        - name
+        - description
+        - parameters
+      properties:
+        name:
+          type: string
+          description: Tool identifier
+        description:
+          type: string
+          description: Tool purpose description
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolParameter'
+          description: Input parameters
+        returnType:
+          type: string
+          description: Expected return type
+        mockResponse:
+          description: Mock response for testing
+
+    ToolParameter:
+      type: object
+      required:
+        - id
+        - type
+        - required
+      properties:
+        id:
+          type: string
+          description: Parameter identifier
+        type:
+          type: string
+          description: Parameter type
+        required:
+          type: boolean
+          description: Whether parameter is mandatory
+        description:
+          type: string
+          description: Parameter description
+        defaultValue:
+          description: Default value
+
+    StateKey:
+      type: object
+      required:
+        - id
+        - required
+        - type
+      properties:
+        id:
+          type: string
+          description: State key identifier
+        required:
+          type: boolean
+          description: Whether data is mandatory
+        description:
+          type: string
+          description: Human-readable description
+        type:
+          type: string
+          enum: [string, number, boolean, object, array]
+          description: Data type
+        nodeAffects:
+          $ref: '#/components/schemas/NodeAffect'
+        validation:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationRule'
+          description: Data validation rules
+
+    Edge:
+      type: object
+      required:
+        - nodeName
+        - condition
+        - stateKeys
+      properties:
+        nodeName:
+          type: string
+          description: Target node ID
+        condition:
+          type: string
+          description: Navigation condition
+        stateKeys:
+          type: array
+          items:
+            type: string
+          description: Required state values
+        label:
+          type: string
+          description: Display label for edge
+
+    Position:
+      type: object
+      required:
+        - x
+        - y
+      properties:
+        x:
+          type: number
+          description: X coordinate
+        y:
+          type: number
+          description: Y coordinate
+
+    WorkflowStates:
+      type: object
+      required:
+        - conversationState
+        - data
+      properties:
+        conversationState:
+          $ref: '#/components/schemas/ConversationState'
+        data:
+          type: object
+          additionalProperties: true
+          description: Data state storage
+        stateKeyValueMap:
+          type: object
+          additionalProperties:
+            type: string
+          description: State key mappings
+
+    ConversationState:
+      type: object
+      required:
+        - currentStep
+        - previousStep
+        - completedSteps
+      properties:
+        currentStep:
+          type: string
+          description: Currently active node
+        previousStep:
+          type: string
+          description: Previously completed node
+        completedSteps:
+          type: array
+          items:
+            type: string
+          description: Array of completed nodes
+        currentWorkflow:
+          type: string
+          description: Active workflow ID
+        previousWorkflow:
+          type: string
+          description: Previous workflow ID
+        completedWorkflows:
+          type: array
+          items:
+            type: string
+          description: Completed workflow IDs
+
+    WorkflowSummary:
+      type: object
+      required:
+        - name
+        - workflows
+        - totalNodes
+      properties:
+        name:
+          type: string
+          description: Workflow name
+        workflows:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/WorkflowNodeSummary'
+          description: Node summaries
+        totalNodes:
+          type: integer
+          description: Total node count
+        complexity:
+          type: string
+          enum: [low, medium, high]
+          description: Workflow complexity rating
+
+    WorkflowNodeSummary:
+      type: object
+      required:
+        - action
+        - dependsOn
+        - next
+      properties:
+        action:
+          type: string
+          description: Node action description
+        dependsOn:
+          type: array
+          items:
+            type: string
+          description: Dependent node IDs
+        next:
+          type: array
+          items:
+            type: string
+          description: Next possible node IDs
+
+    NodeAffect:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        name:
+          type: string
+          description: Affected node name
+        description:
+          type: string
+          description: Effect description
+
+    ValidationRule:
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          type: string
+          enum: [minLength, maxLength, pattern, required, custom]
+          description: Validation rule type
+        value:
+          description: Validation rule value
+        message:
+          type: string
+          description: Error message
+
+    ValidationError:
+      type: object
+      required:
+        - id
+        - type
+        - message
+        - severity
+      properties:
+        id:
+          type: string
+          description: Error identifier
+        type:
+          type: string
+          enum: [validation, connection, dependency, schema]
+          description: Error category
+        message:
+          type: string
+          description: Error description
+        nodeId:
+          type: string
+          description: Related node ID
+        field:
+          type: string
+          description: Related field name
+        severity:
+          type: string
+          enum: [error, warning, info]
+          description: Error importance level
+
+    TestRequest:
+      type: object
+      required:
+        - inputs
+        - mockResponses
+      properties:
+        inputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/TestInput'
+          description: Test input data
+        mockResponses:
+          type: array
+          items:
+            $ref: '#/components/schemas/MockResponse'
+          description: Tool mock responses
+
+    TestInput:
+      type: object
+      required:
+        - step
+        - userInput
+      properties:
+        step:
+          type: integer
+          description: Input step number
+        userInput:
+          type: string
+          description: User input text
+        context:
+          type: object
+          additionalProperties: true
+          description: Input context
+
+    MockResponse:
+      type: object
+      required:
+        - toolName
+        - parameters
+        - response
+      properties:
+        toolName:
+          type: string
+          description: Tool identifier
+        parameters:
+          type: object
+          additionalProperties: true
+          description: Tool parameters
+        response:
+          description: Mock response data
+        delay:
+          type: integer
+          description: Response delay in milliseconds
+
+    TestResult:
+      type: object
+      required:
+        - success
+        - steps
+        - finalState
+      properties:
+        success:
+          type: boolean
+          description: Whether test passed
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/TestStep'
+          description: Test execution steps
+        finalState:
+          type: object
+          additionalProperties: true
+          description: Final workflow state
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          description: Test errors
+
+    TestStep:
+      type: object
+      required:
+        - step
+        - nodeId
+        - action
+        - result
+      properties:
+        step:
+          type: integer
+          description: Step number
+        nodeId:
+          type: string
+          description: Node identifier
+        action:
+          type: string
+          description: Action performed
+        result:
+          type: object
+          additionalProperties: true
+          description: Step result
+        duration:
+          type: integer
+          description: Step duration in milliseconds
+
+  responses:
+    ValidationError:
+      description: Validation error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message
+              details:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ValidationError'
+                description: Detailed validation errors
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message
