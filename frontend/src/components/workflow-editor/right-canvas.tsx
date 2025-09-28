@@ -4,6 +4,7 @@ import type React from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useEditor } from "./store"
 import type { WFNode } from "./types"
+import { BackgroundVariant } from "reactflow"
 
 // --- Shared types/consts ---
 type Point = { x: number; y: number }
@@ -320,7 +321,7 @@ function ReactFlowView({ rf, rfCssLoaded }: { rf: RFModule; rfCssLoaded: boolean
           snapToGrid
           snapGrid={[10, 10]}
         >
-          <Background variant="dots" gap={16} size={1} />
+          <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
           <MiniMap pannable zoomable maskColor="rgba(0,0,0,0.06)" />
           <Controls showInteractive={true} />
           <Panel position="top-right" className="text-xs px-2 py-1 bg-card border rounded-md">

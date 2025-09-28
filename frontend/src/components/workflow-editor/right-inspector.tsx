@@ -1,43 +1,54 @@
-import type React from "react"
+import type React from 'react';
 
-import { useMemo, useState } from "react"
-import { useEditor } from "./store"
-import type { WFNode, Workflow } from "./types"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { NodeForm } from "./node-form"
+import { useMemo, useState } from 'react';
+import { useEditor } from './store';
+import type { WFNode, Workflow } from './types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { NodeForm } from './node-form';
 
 export function RightInspector({ style }: { style?: React.CSSProperties }) {
-  const { state, dispatch } = useEditor()
-  const [newWF, setNewWF] = useState<{ name: string; description: string }>({ name: "", description: "" })
-  const [showWFForm, setShowWFForm] = useState(false)
+  const { state, dispatch } = useEditor();
+  const [newWF, setNewWF] = useState<{ name: string; description: string }>({
+    name: '',
+    description: '',
+  });
+  const [showWFForm, setShowWFForm] = useState(false);
 
-  const workflows = state.data.workflows
-  const selectedWF = state.selectedWorkflow ? workflows[state.selectedWorkflow] : undefined
-  const nodes = useMemo(() => (selectedWF ? Object.values(selectedWF.nodes) : []), [selectedWF])
+  const workflows = state.data.workflows;
+  const selectedWF = state.selectedWorkflow
+    ? workflows[state.selectedWorkflow]
+    : undefined;
+  const nodes = useMemo(
+    () => (selectedWF ? Object.values(selectedWF.nodes) : []),
+    [selectedWF]
+  );
 
   const onAddWF = () => {
-    const name = newWF.name.trim()
-    if (!name) return
+    const name = newWF.name.trim();
+    if (!name) return;
     if (workflows[name]) {
-      alert("Workflow with this name already exists.")
-      return
+      alert('Workflow with this name already exists.');
+      return;
     }
-    const wf: Workflow = { name, description: newWF.description, nodes: {} }
-    dispatch({ type: "ADD_WORKFLOW", workflow: wf })
-    setNewWF({ name: "", description: "" })
-    setShowWFForm(false)
-  }
+    const wf: Workflow = { name, description: newWF.description, nodes: {} };
+    dispatch({ type: 'ADD_WORKFLOW', workflow: wf });
+    setNewWF({ name: '', description: '' });
+    setShowWFForm(false);
+  };
 
   return (
-    <aside style={style} className="w-[360px] border-l border-border bg-card flex flex-col min-h-0">
+    <aside
+      style={style}
+      className="w-[360px] border-l border-border bg-card flex flex-col min-h-0"
+    >
       <Tabs
         value={state.activeTab}
-        onValueChange={(v) => dispatch({ type: "SET_TAB", tab: v as any })}
+        onValueChange={v => dispatch({ type: 'SET_TAB', tab: v as any })}
         className="flex-1 flex flex-col min-h-0"
       >
         <div className="p-3 border-b border-border">
@@ -48,25 +59,34 @@ export function RightInspector({ style }: { style?: React.CSSProperties }) {
         </div>
 
         {/* Workflows Tab: top = scrollable list, bottom = add button + form */}
-        <TabsContent value="workflows" className="flex-1 min-h-0 flex flex-col p-0">
+        <TabsContent
+          value="workflows"
+          className="flex-1 min-h-0 flex flex-col p-0"
+        >
           <div className="flex-1 overflow-auto p-3">
             <div className="space-y-2">
               <h3 className="text-sm font-medium">Existing</h3>
               <ul className="space-y-1">
-                {Object.values(workflows).map((wf) => (
+                {Object.values(workflows).map(wf => (
                   <li key={wf.name}>
                     <button
                       className={`w-full text-left rounded-md px-2 py-2 border hover:bg-accent hover:text-accent-foreground ${
-                        state.selectedWorkflow === wf.name ? "bg-secondary text-secondary-foreground" : "bg-card"
+                        state.selectedWorkflow === wf.name
+                          ? 'bg-secondary text-secondary-foreground'
+                          : 'bg-card'
                       }`}
                       onClick={() => {
-                        dispatch({ type: "SELECT_WORKFLOW", name: wf.name })
-                        dispatch({ type: "SET_TAB", tab: "nodes" })
+                        dispatch({ type: 'SELECT_WORKFLOW', name: wf.name });
+                        dispatch({ type: 'SET_TAB', tab: 'nodes' });
                       }}
                       aria-label={`Select workflow ${wf.name}`}
                     >
                       <div className="font-medium">{wf.name}</div>
-                      {wf.description ? <div className="text-xs text-muted-foreground">{wf.description}</div> : null}
+                      {wf.description ? (
+                        <div className="text-xs text-muted-foreground">
+                          {wf.description}
+                        </div>
+                      ) : null}
                     </button>
                   </li>
                 ))}
@@ -76,13 +96,17 @@ export function RightInspector({ style }: { style?: React.CSSProperties }) {
 
           {/* Bottom action area */}
           <div className="border-t border-border p-3 space-y-2">
-            <Button
-              variant={showWFForm ? "secondary" : "default"}
-              onClick={() => setShowWFForm((s) => !s)}
-              aria-expanded={showWFForm}
-            >
-              {showWFForm ? "Hide Add Workflow" : "Add Workflow"}
-            </Button>
+            {!showWFForm ? (
+              <Button
+                variant={showWFForm ? 'secondary' : 'default'}
+                onClick={() => setShowWFForm(s => !s)}
+                aria-expanded={showWFForm}
+              >
+                Add Workflow
+              </Button>
+            ) : (
+              <></>
+            )}
 
             {showWFForm ? (
               <Card>
@@ -95,7 +119,9 @@ export function RightInspector({ style }: { style?: React.CSSProperties }) {
                     <Input
                       id="wf-name"
                       value={newWF.name}
-                      onChange={(e) => setNewWF((p) => ({ ...p, name: e.target.value }))}
+                      onChange={e =>
+                        setNewWF(p => ({ ...p, name: e.target.value }))
+                      }
                       placeholder="patientsearch"
                     />
                   </div>
@@ -104,13 +130,18 @@ export function RightInspector({ style }: { style?: React.CSSProperties }) {
                     <Textarea
                       id="wf-desc"
                       value={newWF.description}
-                      onChange={(e) => setNewWF((p) => ({ ...p, description: e.target.value }))}
+                      onChange={e =>
+                        setNewWF(p => ({ ...p, description: e.target.value }))
+                      }
                       placeholder="What does this workflow do?"
                     />
                   </div>
                   <div className="flex items-center gap-2">
                     <Button onClick={onAddWF}>Create</Button>
-                    <Button variant="secondary" onClick={() => setShowWFForm(false)}>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setShowWFForm(false)}
+                    >
                       Cancel
                     </Button>
                   </div>
@@ -122,7 +153,9 @@ export function RightInspector({ style }: { style?: React.CSSProperties }) {
 
         <TabsContent value="nodes" className="p-3 overflow-auto flex-1">
           {!selectedWF ? (
-            <div className="text-sm text-muted-foreground">Select a workflow to manage its nodes.</div>
+            <div className="text-sm text-muted-foreground">
+              Select a workflow to manage its nodes.
+            </div>
           ) : state.selectedNode ? (
             <NodeForm workflow={selectedWF} nodeName={state.selectedNode} />
           ) : (
@@ -134,22 +167,24 @@ export function RightInspector({ style }: { style?: React.CSSProperties }) {
         </TabsContent>
       </Tabs>
     </aside>
-  )
+  );
 }
 
 function Palette({ workflow }: { workflow: Workflow }) {
   const handleDragStart = (e: React.DragEvent) => {
-    const payload = JSON.stringify({ base: "newNode", label: "New subagent" })
-    e.dataTransfer.setData("application/x-node-template", payload)
-    e.dataTransfer.effectAllowed = "move"
-  }
+    const payload = JSON.stringify({ base: 'newNode', label: 'New subagent' });
+    e.dataTransfer.setData('application/x-node-template', payload);
+    e.dataTransfer.effectAllowed = 'move';
+  };
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-sm">Node palette</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <div className="text-xs text-muted-foreground">Drag a “New subagent” onto the canvas or use + button.</div>
+        <div className="text-xs text-muted-foreground">
+          Drag a “New subagent” onto the canvas or use + button.
+        </div>
         <button
           draggable
           onDragStart={handleDragStart}
@@ -160,34 +195,34 @@ function Palette({ workflow }: { workflow: Workflow }) {
         </button>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function NodesList({ workflow }: { workflow: Workflow }) {
-  const { dispatch } = useEditor()
-  const [name, setName] = useState("")
+  const { dispatch } = useEditor();
+  const [name, setName] = useState('');
   const addNode = () => {
-    const nm = name.trim()
-    if (!nm) return
+    const nm = name.trim();
+    if (!nm) return;
     if (workflow.nodes[nm]) {
-      alert("Node with this name already exists.")
-      return
+      alert('Node with this name already exists.');
+      return;
     }
     const node: WFNode = {
       name: nm,
-      label: "New subagent",
-      prompt: "",
+      label: 'New subagent',
+      prompt: '',
       preAction: [],
       postAction: [],
       tools: [],
       stateKeys: [],
       edges: [],
       position: { x: 120, y: 120 },
-    }
-    dispatch({ type: "ADD_NODE", workflow: workflow.name, node })
-    dispatch({ type: "SELECT_NODE", name: nm })
-    setName("")
-  }
+    };
+    dispatch({ type: 'ADD_NODE', workflow: workflow.name, node });
+    dispatch({ type: 'SELECT_NODE', name: nm });
+    setName('');
+  };
 
   return (
     <div className="space-y-3">
@@ -197,7 +232,7 @@ function NodesList({ workflow }: { workflow: Workflow }) {
           <Input
             id="new-node"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={e => setName(e.target.value)}
             placeholder="collectIdentifiers"
           />
         </div>
@@ -207,24 +242,39 @@ function NodesList({ workflow }: { workflow: Workflow }) {
       </div>
 
       <ul className="space-y-1">
-        {Object.values(workflow.nodes).map((n) => (
-          <li key={n.name} className="flex items-center justify-between rounded-md border px-2 py-2">
+        {Object.values(workflow.nodes).map(n => (
+          <li
+            key={n.name}
+            className="flex items-center justify-between rounded-md border px-2 py-2"
+          >
             <button
               className="text-left flex-1 pr-2 hover:underline"
-              onClick={() => dispatch({ type: "SELECT_NODE", name: n.name })}
+              onClick={() => dispatch({ type: 'SELECT_NODE', name: n.name })}
               aria-label={`Edit node ${n.name}`}
             >
               <div className="font-medium">{n.label || n.name}</div>
-              <div className="text-xs text-muted-foreground">{n.prompt ? n.prompt.slice(0, 60) : "No prompt"}</div>
+              <div className="text-xs text-muted-foreground">
+                {n.prompt ? n.prompt.slice(0, 60) : 'No prompt'}
+              </div>
             </button>
             <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" onClick={() => dispatch({ type: "SELECT_NODE", name: n.name })}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => dispatch({ type: 'SELECT_NODE', name: n.name })}
+              >
                 Edit
               </Button>
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => dispatch({ type: "DELETE_NODE", workflow: workflow.name, nodeName: n.name })}
+                onClick={() =>
+                  dispatch({
+                    type: 'DELETE_NODE',
+                    workflow: workflow.name,
+                    nodeName: n.name,
+                  })
+                }
               >
                 Delete
               </Button>
@@ -233,5 +283,5 @@ function NodesList({ workflow }: { workflow: Workflow }) {
         ))}
       </ul>
     </div>
-  )
+  );
 }
