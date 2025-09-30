@@ -12,5 +12,3 @@ TODO
 
 -passing the existing conversation and use it as test case.
 
-
-export GITHUB_TOKEN=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
