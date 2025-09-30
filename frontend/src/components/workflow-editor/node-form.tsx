@@ -39,9 +39,6 @@ export function NodeForm({ workflow, nodeName }: { workflow: Workflow; nodeName:
         </Button>
       </div>
 
-      {/* Removed Label (optional) input */}
-      {/* Previously here was the Label field */}
-
       <div className="space-y-2">
         <Label htmlFor="prompt">Prompt</Label>
         <Textarea

@@ -7,6 +7,7 @@ const SAMPLE: RootConfig = {
     patientsearch: {
       name: "patientsearch",
       description: "Handles patient search verification",
+      nodeOrder: ["collectIdentifiers", "newPatient", "end"],
       nodes: {
         collectIdentifiers: {
           name: "collectIdentifiers",
@@ -50,11 +51,11 @@ const SAMPLE: RootConfig = {
         must: ["patientsearch"],
         desc: "patientsearch is required before booking; ensure end node is called",
       },
+      nodeOrder: ["getProviders", "getAppointmentTypes", "getSlotsAndBook"],
       nodes: {
         getProviders: {
           name: "getProviders",
           isFirstNode: true,
-          label: "Fetch Departments & Providers",
           preAction: ["fetchDepartmentsAndProviders"],
           stateKeys: [
             {
@@ -72,7 +73,6 @@ const SAMPLE: RootConfig = {
         },
         getAppointmentTypes: {
           name: "getAppointmentTypes",
-          label: "Fetch Appointment Type",
           preAction: ["getAppointmentTypes"],
           stateKeys: [
             {
@@ -132,6 +132,7 @@ type Action =
   | { type: "ADD_EDGE"; workflow: string; from: string; edge: Edge }
   | { type: "DELETE_EDGE"; workflow: string; from: string; to: string }
   | { type: "UPDATE_EDGE"; workflow: string; from: string; to: string; patch: Partial<Edge>; newTo?: string }
+  | { type: "REORDER_NODES"; workflow: string; nodeOrder: string[] }
   | { type: "SELECT_NODE"; name?: string }
   | { type: "SET_TAB"; tab: "workflows" | "nodes" }
 
@@ -145,9 +146,14 @@ function reducer(state: EditorState, action: Action): EditorState {
       return { ...state, selectedWorkflow: action.name, selectedNode: undefined }
     case "ADD_WORKFLOW": {
       const wf = action.workflow
+      // Initialize nodeOrder if not provided
+      const workflowWithOrder = {
+        ...wf,
+        nodeOrder: wf.nodeOrder || Object.keys(wf.nodes)
+      }
       return {
         ...state,
-        data: { ...state.data, workflows: { ...state.data.workflows, [wf.name]: wf } },
+        data: { ...state.data, workflows: { ...state.data.workflows, [wf.name]: workflowWithOrder } },
         selectedWorkflow: wf.name,
         activeTab: "nodes",
       }
@@ -179,6 +185,19 @@ function reducer(state: EditorState, action: Action): EditorState {
     case "ADD_NODE": {
       const wf = state.data.workflows[action.workflow]
       if (!wf) return state
+      
+      const currentOrder = wf.nodeOrder || Object.keys(wf.nodes)
+      const lastNodeName = currentOrder[currentOrder.length - 1]
+      
+      // Update the last node to connect to the new node
+      const updatedNodes = { ...wf.nodes }
+      if (lastNodeName && updatedNodes[lastNodeName]) {
+        updatedNodes[lastNodeName] = {
+          ...updatedNodes[lastNodeName],
+          edges: [...(updatedNodes[lastNodeName].edges || []), { to: action.node.name }]
+        }
+      }
+      
       return {
         ...state,
         data: {
@@ -187,7 +206,8 @@ function reducer(state: EditorState, action: Action): EditorState {
             ...state.data.workflows,
             [action.workflow]: {
               ...wf,
-              nodes: { ...wf.nodes, [action.node.name]: action.node },
+              nodes: { ...updatedNodes, [action.node.name]: action.node },
+              nodeOrder: [...currentOrder, action.node.name],
             },
           },
         },
@@ -256,12 +276,21 @@ function reducer(state: EditorState, action: Action): EditorState {
           return [k, { ...v, edges }]
         }),
       )
+      // remove from nodeOrder
+      const updatedNodeOrder = (wf.nodeOrder || Object.keys(wf.nodes)).filter(name => name !== action.nodeName)
       const nextSelected = state.selectedNode === action.nodeName ? undefined : state.selectedNode
       return {
         ...state,
         data: {
           ...state.data,
-          workflows: { ...state.data.workflows, [action.workflow]: { ...wf, nodes: cleaned } },
+          workflows: { 
+            ...state.data.workflows, 
+            [action.workflow]: { 
+              ...wf, 
+              nodes: cleaned,
+              nodeOrder: updatedNodeOrder
+            } 
+          },
         },
         selectedNode: nextSelected,
       }
@@ -350,6 +379,51 @@ function reducer(state: EditorState, action: Action): EditorState {
         },
       }
     }
+    case "REORDER_NODES": {
+      const wf = state.data.workflows[action.workflow]
+      if (!wf) return state
+      
+      // Update nodeOrder and also update the nodes object to match the new order
+      const reorderedNodes: Record<string, WFNode> = {}
+      action.nodeOrder.forEach(nodeName => {
+        if (wf.nodes[nodeName]) {
+          reorderedNodes[nodeName] = wf.nodes[nodeName]
+        }
+      })
+      
+      // Update edges to follow the new order
+      const updatedNodes: Record<string, WFNode> = {}
+      action.nodeOrder.forEach((nodeName, index) => {
+        const node = reorderedNodes[nodeName]
+        if (node) {
+          // Clear existing edges
+          const updatedNode: WFNode = { ...node, edges: [] }
+          
+          // Add edge to next node in order (if not the last node)
+          if (index < action.nodeOrder.length - 1) {
+            const nextNodeName = action.nodeOrder[index + 1]
+            updatedNode.edges = [{ to: nextNodeName }]
+          }
+          
+          updatedNodes[nodeName] = updatedNode
+        }
+      })
+      
+      return {
+        ...state,
+        data: {
+          ...state.data,
+          workflows: {
+            ...state.data.workflows,
+            [action.workflow]: {
+              ...wf,
+              nodeOrder: action.nodeOrder,
+              nodes: updatedNodes,
+            },
+          },
+        },
+      }
+    }
     case "SELECT_NODE":
       return { ...state, selectedNode: action.name }
     case "SET_TAB":
@@ -378,7 +452,24 @@ export function EditorProvider({ children, initialData }: { children: React.Reac
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as RootConfig
-        dispatch({ type: "LOAD", payload: parsed })
+        
+        // Migrate existing workflows to include nodeOrder
+        const migratedWorkflows = Object.fromEntries(
+          Object.entries(parsed.workflows).map(([name, workflow]) => [
+            name,
+            {
+              ...workflow,
+              nodeOrder: workflow.nodeOrder || Object.keys(workflow.nodes)
+            }
+          ])
+        )
+        
+        const migratedData = {
+          ...parsed,
+          workflows: migratedWorkflows
+        }
+        
+        dispatch({ type: "LOAD", payload: migratedData })
       }
     } catch {}
   }, [])

@@ -10,7 +10,7 @@ const App: React.FC = () => {
   const initial = useMemo(() => undefined, [])
 
   // Resizable inspector width
-  const [inspectorWidth, setInspectorWidth] = useState(360)
+  const [inspectorWidth, setInspectorWidth] = useState(558)
   const draggingRef = useRef<{
     startX: number
     startWidth: number

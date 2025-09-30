@@ -36,6 +36,42 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+  
+  .darks {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.145 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.145 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.985 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.396 0.141 25.723);
+    --destructive-foreground: oklch(0.637 0.237 25.331);
+    --border: oklch(0.269 0 0);
+    --input: oklch(0.269 0 0);
+    --ring: oklch(0.439 0 0);
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.696 0.17 162.48);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(0.269 0 0);
+    --sidebar-ring: oklch(0.439 0 0);
+  }
+  
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -64,6 +100,8 @@
   }
 }
 
+
+
 @layer base {
   * {
     border-color: hsl(var(--border));
@@ -76,132 +114,6 @@
 /* Dark Theme Base */
 .dark {
   color-scheme: dark;
-}
-
-/* Modern React Flow Styling - Dark Theme */
-.react-flow__node {
-  cursor: pointer;
-  position: relative;
-  z-index: 1;
-  /* Remove conflicting transforms and transitions during drag */
-}
-
-/* Only apply effects when not dragging or connecting */
-.react-flow__node:not(.react-flow__node--dragging):not(.connecting) {
-  transition: filter 0.2s ease, box-shadow 0.2s ease;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
-}
-
-.react-flow__node:not(.react-flow__node--dragging):not(.connecting):hover {
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
-  z-index: 2;
-}
-
-.react-flow__node:not(.react-flow__node--dragging).selected {
-  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
-  z-index: 3;
-}
-
-.react-flow__node--dragging {
-  transition: none !important;
-  transform: none !important;
-  will-change: transform;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
-  z-index: 999;
-  cursor: grabbing !important;
-}
-
-.react-flow__node--dragging > * {
-  pointer-events: none;
-  user-select: none;
-}
-
-/* Ensure individual nodes can be selected and dragged */
-.react-flow__node {
-  user-select: none;
-  -webkit-user-drag: none;
-  transform-origin: center;
-  isolation: isolate;
-  cursor: grab;
-}
-
-.react-flow__node:active {
-  cursor: grabbing;
-}
-
-.react-flow__node > * {
-  user-select: none;
-  -webkit-user-drag: none;
-  pointer-events: auto;
-}
-
-/* Prevent interference between nodes */
-.react-flow__node:not(.react-flow__node--dragging) {
-  transform: none;
-}
-
-/* Ensure draggable nodes work properly */
-.react-flow__node[draggable="true"] {
-  cursor: grab;
-}
-
-.react-flow__node[draggable="true"]:active {
-  cursor: grabbing;
-}
-
-.react-flow__edge-path {
-  stroke: #6b7280;
-  stroke-width: 2;
-  transition: all 0s ease;
-}
-
-.react-flow__edge:hover .react-flow__edge-path {
-  stroke: #8b5cf6;
-  stroke-width: 2.5;
-}
-
-.react-flow__edge.selected .react-flow__edge-path {
-  stroke: #8b5cf6;
-  stroke-width: 2.5;
-  filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.4));
-}
-
-.react-flow__edge-text {
-  font-size: 11px;
-  fill: #9ca3af;
-  font-weight: 500;
-}
-
-.react-flow__controls {
-  background: rgba(31, 41, 55, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(75, 85, 99, 0.8);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
-
-.react-flow__controls-button {
-  background: rgba(55, 65, 81, 0.8);
-  border: 1px solid rgba(75, 85, 99, 0.6);
-  color: #9ca3af;
-  transition: all 0.2s ease;
-  border-radius: 6px;
-  margin: 1px;
-}
-
-.react-flow__controls-button:hover {
-  background: rgba(139, 92, 246, 0.2);
-  border-color: rgba(139, 92, 246, 0.4);
-  color: #a78bfa;
-  transform: scale(1.02);
-}
-
-.react-flow__minimap {
-  background: rgba(31, 41, 55, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(75, 85, 99, 0.8);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 /* Modern Scrollbar - Dark Theme */

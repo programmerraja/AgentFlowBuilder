@@ -47,6 +47,7 @@ export type Workflow = {
   description?: string
   requiredWorkflow?: { must?: string[]; desc?: string }
   nodes: Record<string, WFNode>
+  nodeOrder?: string[] // Explicit order of node names
   states?: Record<string, any>
   summary?: Record<string, any>
 }

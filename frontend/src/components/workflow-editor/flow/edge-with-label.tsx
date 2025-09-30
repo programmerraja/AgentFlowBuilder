@@ -28,7 +28,7 @@ export default function LabeledEdge(props: EdgeProps) {
         path={edgePath}
         markerEnd={markerEnd}
         style={{
-          stroke: selected ? "var(--primary)" : "var(--muted-foreground)",
+          stroke: selected ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
           strokeWidth: selected ? 2.25 : 1.5,
           ...style,
         }}
